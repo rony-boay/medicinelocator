@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "213087588930",
+    "project_id": "medicinelocator-67a29",
+    "storage_bucket": "medicinelocator-67a29.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:213087588930:android:5cc04139a14bcdb509d3db",
+        "android_client_info": {
+          "package_name": "com.example.medicinelocator1"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyApWNim0nnuvHJQWu5D9AhCUeIWmXYWSDc"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
