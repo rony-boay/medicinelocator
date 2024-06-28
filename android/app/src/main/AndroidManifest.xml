@@ -1,8 +1,14 @@
-<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    package="com.example.medicinelocator1">
+
+    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
+    
     <application
         android:label="medicinelocator1"
         android:name="${applicationName}"
         android:icon="@mipmap/ic_launcher">
+        <!-- Your application configuration -->
+        
         <activity
             android:name=".MainActivity"
             android:exported="true"
@@ -19,6 +25,9 @@
                 <category android:name="android.intent.category.LAUNCHER"/>
             </intent-filter>
         </activity>
+        
+        <!-- Other configurations -->
+        
         <meta-data
             android:name="flutterEmbedding"
             android:value="2"/>
@@ -26,6 +35,7 @@
             android:name="com.google.mlkit.vision.DEPENDENCIES"
             android:value="ocr"/>
     </application>
+    
     <queries>
         <intent>
             <action android:name="android.intent.action.PROCESS_TEXT"/>

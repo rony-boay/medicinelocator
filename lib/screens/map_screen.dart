@@ -2,9 +2,13 @@ import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:geolocator/geolocator.dart';
-import '../services/firestore_service.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 
 class MapScreen extends StatefulWidget {
+  final List<DocumentSnapshot>? pharmacies;
+
+  MapScreen({this.pharmacies});
+
   @override
   _MapScreenState createState() => _MapScreenState();
 }
@@ -49,8 +53,6 @@ class _MapScreenState extends State<MapScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final firestoreService = FirestoreService();
-
     return Scaffold(
       appBar: AppBar(
         title: Text('Nearby Pharmacies'),
@@ -76,7 +78,19 @@ class _MapScreenState extends State<MapScreen> {
                   size: 40.0,
                 ),
               ),
-              // Add more markers for nearby pharmacies
+              if (widget.pharmacies != null)
+                for (var pharmacy in widget.pharmacies!)
+                  Marker(
+                    point: LatLng(
+                      (pharmacy['location'] as GeoPoint).latitude,
+                      (pharmacy['location'] as GeoPoint).longitude,
+                    ),
+                    builder: (ctx) => Icon(
+                      Icons.local_pharmacy,
+                      color: Colors.green,
+                      size: 40.0,
+                    ),
+                  ),
             ],
           ),
         ],

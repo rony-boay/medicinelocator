@@ -1,16 +1,15 @@
-import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:firebase_auth/firebase_auth.dart';
+import 'screens/inventory_management_screen.dart';
+import 'services/auth_service.dart';
 import 'screens/login_screen.dart';
 import 'screens/register_screen.dart';
 import 'screens/user_home_screen.dart';
 import 'screens/pharmacist_home_screen.dart';
-import 'services/auth_service.dart';
+import 'screens/map_screen.dart';
+import 'screens/add_pharmacy_screen.dart';
 
-void main() async {
-  WidgetsFlutterBinding.ensureInitialized();
-  await Firebase.initializeApp();
+void main() {
   runApp(MyApp());
 }
 
@@ -23,15 +22,15 @@ class MyApp extends StatelessWidget {
       ],
       child: MaterialApp(
         title: 'Medicine Locator',
-        theme: ThemeData(
-          primarySwatch: Colors.blue,
-        ),
         initialRoute: '/',
         routes: {
           '/': (context) => LoginScreen(),
-          '/register': (context) => LoginScreenRegister(),
-          '/user_home': (context) => UserHomeScreen(user: FirebaseAuth.instance.currentUser!),
-          '/pharmacist_home': (context) => PharmacistHomeScreen(user: FirebaseAuth.instance.currentUser!),
+          '/register': (context) => RegisterScreen(),
+          '/user_home': (context) => UserHomeScreen(user: Provider.of<AuthService>(context).currentUser!),
+          '/pharmacist_home': (context) => PharmacistHomeScreen(user: Provider.of<AuthService>(context).currentUser!),
+          '/map': (context) => MapScreen(),
+          '/inventory': (context) => InventoryManagementScreen(user: Provider.of<AuthService>(context).currentUser!),
+          '/add_pharmacy': (context) => AddPharmacyScreen(user: Provider.of<AuthService>(context).currentUser!),
         },
       ),
     );

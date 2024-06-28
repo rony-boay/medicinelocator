@@ -1,13 +1,15 @@
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../services/auth_service.dart';
+import 'user_home_screen.dart';
 
-class LoginScreenRegister extends StatefulWidget {
+class RegisterScreen extends StatefulWidget {
   @override
-  _LoginScreenState createState() => _LoginScreenState();
+  _RegisterScreenState createState() => _RegisterScreenState();
 }
 
-class _LoginScreenState extends State<LoginScreenRegister> {
+class _RegisterScreenState extends State<RegisterScreen> {
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
 
@@ -17,7 +19,7 @@ class _LoginScreenState extends State<LoginScreenRegister> {
 
     return Scaffold(
       appBar: AppBar(
-        title: Text('Login'),
+        title: Text('Register'),
       ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
@@ -35,19 +37,24 @@ class _LoginScreenState extends State<LoginScreenRegister> {
             SizedBox(height: 20),
             ElevatedButton(
               onPressed: () async {
-                await authService.signInWithEmail(_emailController.text, _passwordController.text);
-                if (authService.currentUser != null) {
-                  Navigator.pushReplacementNamed(
+                User? user = await authService.registerWithEmail(
+                  _emailController.text,
+                  _passwordController.text
+                  
+                );
+
+                if (user != null) {
+                  Navigator.pushReplacement(
                     context,
-                    await authService.isPharmacist ? '/pharmacist_home' : '/user_home',
+                    MaterialPageRoute(
+                      builder: (context) => UserHomeScreen(user: user),
+                    ),
                   );
+                } else {
+                  ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                    content: Text('Failed to register'),
+                  ));
                 }
-              },
-              child: Text('Login'),
-            ),
-            TextButton(
-              onPressed: () {
-                Navigator.pushNamed(context, '/register');
               },
               child: Text('Register'),
             ),
