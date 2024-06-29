@@ -68,8 +68,27 @@ class UserHomeScreen extends StatelessWidget {
           ],
         ),
       ),
-      body: Center(
-        child: Text('Welcome, ${user.email}!'),
+      body: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          children: [
+            TextField(
+              decoration: InputDecoration(
+                labelText: 'Search Medicine',
+                suffixIcon: IconButton(
+                  icon: Icon(Icons.search),
+                  onPressed: () async {
+                    // Implement search functionality
+                  },
+                ),
+              ),
+            ),
+            SizedBox(height: 20),
+            Expanded(
+              child: MapScreen(),
+            ),
+          ],
+        ),
       ),
     );
   }

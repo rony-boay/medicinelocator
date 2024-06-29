@@ -1,37 +1,43 @@
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter/material.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 
-class AuthService {
+class AuthService extends ChangeNotifier {
   final FirebaseAuth _auth = FirebaseAuth.instance;
+  User? _currentUser;
+  bool _isPharmacist = false;
 
-  User? get currentUser => _auth.currentUser;
+  User? get currentUser => _currentUser;
+  bool get isPharmacist => _isPharmacist;
 
-  bool get isPharmacist {
-    // Implement logic to determine if the user is a pharmacist
-    // For example, check user's claims or additional information stored in Firestore
-    return true; // Placeholder
+  Future<void> registerWithEmail(String name, String email, String password) async {
+    final userCredential = await _auth.createUserWithEmailAndPassword(email: email, password: password);
+    _currentUser = userCredential.user;
+
+    // Save additional user data in Firestore
+    await FirebaseFirestore.instance.collection('users').doc(_currentUser!.uid).set({
+      'name': name,
+      'email': email,
+      'isPharmacist': _isPharmacist,
+    });
+
+    notifyListeners();
   }
 
-  Future<User?> signInWithEmail(String email, String password) async {
-    try {
-      UserCredential result = await _auth.signInWithEmailAndPassword(email: email, password: password);
-      return result.user;
-    } catch (e) {
-      print(e);
-      return null;
-    }
-  }
+  Future<void> signInWithEmail(String email, String password) async {
+    final userCredential = await _auth.signInWithEmailAndPassword(email: email, password: password);
+    _currentUser = userCredential.user;
 
-  Future<User?> registerWithEmail(String email, String password) async {
-    try {
-      UserCredential result = await _auth.createUserWithEmailAndPassword(email: email, password: password);
-      return result.user;
-    } catch (e) {
-      print(e);
-      return null;
-    }
+    final doc = await FirebaseFirestore.instance.collection('users').doc(_currentUser!.uid).get();
+    _isPharmacist = doc.data()!['isPharmacist'];
+
+    notifyListeners();
   }
 
   Future<void> signOut() async {
     await _auth.signOut();
+    _currentUser = null;
+    _isPharmacist = false;
+    notifyListeners();
   }
 }

@@ -10,7 +10,6 @@ class LoginScreen extends StatefulWidget {
 class _LoginScreenState extends State<LoginScreen> {
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
-  bool _isPharmacist = false; // Added variable to track user type
 
   @override
   Widget build(BuildContext context) {
@@ -34,31 +33,6 @@ class _LoginScreenState extends State<LoginScreen> {
               obscureText: true,
             ),
             SizedBox(height: 20),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Text('Login as: '),
-                DropdownButton<bool>(
-                  value: _isPharmacist,
-                  items: [
-                    DropdownMenuItem(
-                      child: Text('User'),
-                      value: false,
-                    ),
-                    DropdownMenuItem(
-                      child: Text('Pharmacist'),
-                      value: true,
-                    ),
-                  ],
-                  onChanged: (bool? value) {
-                    setState(() {
-                      _isPharmacist = value!;
-                    });
-                  },
-                ),
-              ],
-            ),
-            SizedBox(height: 20),
             ElevatedButton(
               onPressed: () async {
                 await authService.signInWithEmail(
@@ -66,7 +40,9 @@ class _LoginScreenState extends State<LoginScreen> {
                 if (authService.currentUser != null) {
                   Navigator.pushReplacementNamed(
                     context,
-                    _isPharmacist ? '/pharmacist_home' : '/user_home',
+                    authService.isPharmacist
+                        ? '/pharmacist_home'
+                        : '/user_home',
                   );
                 }
               },

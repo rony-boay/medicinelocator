@@ -59,7 +59,7 @@ class PharmacistHomeScreen extends StatelessWidget {
         ),
       ),
       body: Center(
-        child: Text('Welcome, ${user.email}!'),
+        child: Text('Welcome, Pharmacist!'),
       ),
     );
   }

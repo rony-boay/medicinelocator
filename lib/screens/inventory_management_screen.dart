@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:provider/provider.dart';
+import '../services/firestore_service.dart';
+import '../widgets/inventory_item.dart';
 
 class InventoryManagementScreen extends StatelessWidget {
   final User user;
@@ -9,36 +11,37 @@ class InventoryManagementScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final firestoreService = Provider.of<FirestoreService>(context);
+
     return Scaffold(
       appBar: AppBar(
         title: Text('Inventory Management'),
       ),
       body: StreamBuilder(
-        stream: FirebaseFirestore.instance
-            .collection('pharmacies')
-            .doc(user.uid)
-            .collection('inventory')
-            .snapshots(),
-        builder: (context, AsyncSnapshot<QuerySnapshot> snapshot) {
-          if (!snapshot.hasData) return CircularProgressIndicator();
+        stream: firestoreService.getMedicines(user.uid),
+        builder: (context, AsyncSnapshot<List<Medicine>> snapshot) {
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            return Center(child: CircularProgressIndicator());
+          }
 
-          return ListView(
-            children: snapshot.data!.docs.map((document) {
-              Map<String, dynamic> data = document.data() as Map<String, dynamic>;
-              int quantity = data['quantity'];
-              return ListTile(
-                title: Text(data['name']),
-                subtitle: Text('Quantity: $quantity'),
-                trailing: IconButton(
-                  icon: Icon(Icons.edit),
-                  onPressed: () {
-                    // Edit inventory item
-                  },
-                ),
-              );
-            }).toList(),
+          if (!snapshot.hasData || snapshot.data!.isEmpty) {
+            return Center(child: Text('No medicines in inventory.'));
+          }
+
+          return ListView.builder(
+            itemCount: snapshot.data!.length,
+            itemBuilder: (context, index) {
+              final medicine = snapshot.data![index];
+              return InventoryItem(medicine: medicine);
+            },
           );
         },
+      ),
+      floatingActionButton: FloatingActionButton(
+        onPressed: () {
+          // Implement add medicine functionality
+        },
+        child: Icon(Icons.add),
       ),
     );
   }
