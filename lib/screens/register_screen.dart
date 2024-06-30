@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../services/auth_service.dart';
-import 'login_screen.dart';
 
 class RegisterScreen extends StatefulWidget {
   @override
@@ -9,9 +8,17 @@ class RegisterScreen extends StatefulWidget {
 }
 
 class _RegisterScreenState extends State<RegisterScreen> {
-  final _nameController = TextEditingController();
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
+
+  void _showSnackbar(String message) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(message),
+        duration: Duration(seconds: 3),
+      ),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -25,10 +32,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
         padding: const EdgeInsets.all(16.0),
         child: Column(
           children: [
-            TextField(
-              controller: _nameController,
-              decoration: InputDecoration(labelText: 'Name'),
-            ),
+            
             TextField(
               controller: _emailController,
               decoration: InputDecoration(labelText: 'Email'),
@@ -41,15 +45,19 @@ class _RegisterScreenState extends State<RegisterScreen> {
             SizedBox(height: 20),
             ElevatedButton(
               onPressed: () async {
-                await authService.registerWithEmail(
-                  _nameController.text,
-                  _emailController.text,
-                  _passwordController.text,
-                );
-                Navigator.pushReplacement(
-                  context,
-                  MaterialPageRoute(builder: (context) => LoginScreen()),
-                );
+                try {
+                  await authService.registerWithEmail(
+                 
+                    _emailController.text,
+                    _passwordController.text,
+                  );
+                  if (authService.currentUser != null) {
+                    Navigator.pushReplacementNamed(
+                        context, '/user_type_selection');
+                  }
+                } catch (e) {
+                  _showSnackbar('Registration failed: ${e.toString()}');
+                }
               },
               child: Text('Register'),
             ),

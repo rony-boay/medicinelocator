@@ -1,6 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:latlong2/latlong.dart';
+import 'dart:async';
 
 class FirestoreService extends ChangeNotifier {
   final FirebaseFirestore _db = FirebaseFirestore.instance;
@@ -16,74 +17,87 @@ class FirestoreService extends ChangeNotifier {
   }
 
   Future<QuerySnapshot> searchMedicine(String medicineName) async {
-    try {
-      return await _db
-          .collection('medicines')
-          .where('name', isEqualTo: medicineName)
-          .get();
-    } catch (e) {
-      print('Error searching medicine: $e');
-      throw Exception('Failed to search medicine');
-    }
+    return await _retry(() => _db
+        .collection('medicines')
+        .where('name', isEqualTo: medicineName)
+        .get());
   }
 
-  
-  Future<List<DocumentSnapshot>> getNearbyPharmaciesWithMedicine(String medicineName, LatLng userLocation) async {
-    try {
-      // 1. Get a reference to the pharmacies collection
+  Future<List<DocumentSnapshot>> getNearbyPharmaciesWithMedicine(
+      String medicineName, LatLng userLocation) async {
+    return await _retry(() async {
       CollectionReference pharmaciesRef = _db.collection('pharmacies');
-
-      // 2. Perform a query to find nearby pharmacies (adjust distance as per your requirements)
       QuerySnapshot querySnapshot = await pharmaciesRef
-          .where('medicines.${medicineName.toLowerCase()}', isEqualTo: true) // Assuming medicines are stored as a map
-          .where('location', isLessThanOrEqualTo: GeoPoint(userLocation.latitude + 0.1, userLocation.longitude + 0.1)) // Adjust distance range as needed
-          .where('location', isGreaterThanOrEqualTo: GeoPoint(userLocation.latitude - 0.1, userLocation.longitude - 0.1))
+          .where('medicines.${medicineName.toLowerCase()}', isEqualTo: true)
+          .where('location',
+              isLessThanOrEqualTo: GeoPoint(
+                  userLocation.latitude + 0.1, userLocation.longitude + 0.1))
+          .where('location',
+              isGreaterThanOrEqualTo: GeoPoint(
+                  userLocation.latitude - 0.1, userLocation.longitude - 0.1))
           .get();
-
-      // 3. Return the list of DocumentSnapshot objects for nearby pharmacies
       return querySnapshot.docs;
-    } catch (e) {
-      print('Error getting nearby pharmacies: $e');
-      throw Exception('Failed to get nearby pharmacies');
-    }
-  
-}
-
-  Future<void> addMedicine(String userId, String name, String category, int quantity) async {
-    await _db.collection('pharmacies').doc(userId).collection('medicines').add({
-      'name': name,
-      'category': category,
-      'quantity': quantity,
     });
   }
 
-  Future<void> updateMedicine(String userId, String medicineId, String name, String category, int quantity) async {
-    await _db.collection('pharmacies').doc(userId).collection('medicines').doc(medicineId).update({
-      'name': name,
-      'category': category,
-      'quantity': quantity,
-      'userId': userId,
-    });
+  Future<void> addMedicine(
+      String userId, String name, String category, int quantity) async {
+    await _retry(() =>
+        _db.collection('pharmacies').doc(userId).collection('medicines').add({
+          'name': name,
+          'category': category,
+          'quantity': quantity,
+        }));
+  }
+
+  Future<void> updateMedicine(String userId, String medicineId, String name,
+      String category, int quantity) async {
+    await _retry(() => _db
+            .collection('pharmacies')
+            .doc(userId)
+            .collection('medicines')
+            .doc(medicineId)
+            .update({
+          'name': name,
+          'category': category,
+          'quantity': quantity,
+          'userId': userId,
+        }));
   }
 
   Future<void> deleteMedicine(String userId, String medicineId) async {
-    await _db.collection('pharmacies').doc(userId).collection('medicines').doc(medicineId).delete();
+    await _retry(() => _db
+        .collection('pharmacies')
+        .doc(userId)
+        .collection('medicines')
+        .doc(medicineId)
+        .delete());
   }
 
-  Future<void> addPharmacy(
-      String userId, String pharmacyName, double latitude, double longitude) async {
-    try {
-      await _db.collection('pharmacies').add({
-        'userId': userId,
-        'pharmacyName': pharmacyName,
-        'location': GeoPoint(latitude, longitude),
-      });
-    } catch (e) {
-      print('Error adding pharmacy: $e');
-      throw Exception('Failed to add pharmacy');
+  Future<void> addPharmacy(String userId, String pharmacyName, double latitude,
+      double longitude) async {
+    await _retry(() => _db.collection('pharmacies').add({
+          'userId': userId,
+          'pharmacyName': pharmacyName,
+          'location': GeoPoint(latitude, longitude),
+        }));
+  }
+
+  Future<T> _retry<T>(Future<T> Function() operation,
+      {int retries = 3, Duration delay = const Duration(seconds: 2)}) async {
+    int attempt = 0;
+    while (true) {
+      attempt++;
+      try {
+        return await operation();
+      } catch (e) {
+        if (attempt > retries || e is! FirebaseException) {
+          rethrow;
+        }
+        await Future.delayed(delay);
+      }
     }
   }
-
 }
 
 class Medicine {

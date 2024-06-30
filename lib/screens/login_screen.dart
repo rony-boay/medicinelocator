@@ -36,19 +36,18 @@ class _LoginScreenState extends State<LoginScreen> {
             ElevatedButton(
               onPressed: () async {
                 await authService.signInWithEmail(
-                    _emailController.text, _passwordController.text);
+                  _emailController.text,
+                  _passwordController.text,
+                );
                 if (authService.currentUser != null) {
                   Navigator.pushReplacementNamed(
-                    context,
-                    authService.isPharmacist
-                        ? '/pharmacist_home'
-                        : '/user_home',
-                  );
+                      context, '/user_type_selection');
                 }
               },
+
               child: Text('Login'),
             ),
-            ElevatedButton(
+            TextButton(
               onPressed: () {
                 Navigator.pushNamed(context, '/register');
               },

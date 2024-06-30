@@ -10,13 +10,12 @@ class AuthService extends ChangeNotifier {
   User? get currentUser => _currentUser;
   bool get isPharmacist => _isPharmacist;
 
-  Future<void> registerWithEmail(String name, String email, String password) async {
+  Future<void> registerWithEmail( String email, String password) async {
     final userCredential = await _auth.createUserWithEmailAndPassword(email: email, password: password);
     _currentUser = userCredential.user;
 
-    // Save additional user data in Firestore
     await FirebaseFirestore.instance.collection('users').doc(_currentUser!.uid).set({
-      'name': name,
+      
       'email': email,
       'isPharmacist': _isPharmacist,
     });

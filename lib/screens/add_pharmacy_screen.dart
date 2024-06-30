@@ -35,32 +35,59 @@ class _AddPharmacyScreenState extends State<AddPharmacyScreen> {
             SizedBox(height: 20),
             ElevatedButton(
               onPressed: () async {
-                bool serviceEnabled = await Geolocator.isLocationServiceEnabled();
-                if (!serviceEnabled) {
-                  return Future.error('Location services are disabled.');
-                }
-
-                LocationPermission permission = await Geolocator.checkPermission();
-                if (permission == LocationPermission.denied) {
-                  permission = await Geolocator.requestPermission();
-                  if (permission == LocationPermission.denied) {
-                    return Future.error('Location permissions are denied.');
+                try {
+                  bool serviceEnabled = await Geolocator.isLocationServiceEnabled();
+                  if (!serviceEnabled) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(content: Text('Location services are disabled.'))
+                    );
+                    return;
                   }
+
+                  LocationPermission permission = await Geolocator.checkPermission();
+                  if (permission == LocationPermission.denied) {
+                    permission = await Geolocator.requestPermission();
+                    if (permission == LocationPermission.denied) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(content: Text('Location permissions are denied.'))
+                      );
+                      return;
+                    }
+                  }
+
+                  if (permission == LocationPermission.deniedForever) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(content: Text('Location permissions are permanently denied.'))
+                    );
+                    return;
+                  }
+
+                  _currentPosition = await Geolocator.getCurrentPosition();
+
+                  await firestoreService.addPharmacy(
+                    widget.user.uid,
+                    _pharmacyNameController.text,
+                    _currentPosition.latitude,
+                    _currentPosition.longitude,
+                  );
+
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text('Pharmacy added successfully!'),
+                      duration: Duration(seconds: 1), // Duration of the success message
+                    ),
+                  );
+
+                  // Wait for the duration of the SnackBar and then navigate back to the main pharmacist home page
+                  Future.delayed(Duration(seconds: 1), () {
+                    Navigator.popUntil(context, ModalRoute.withName('/pharmacist_home'));
+                  });
+
+                } catch (e) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(content: Text('Failed to add pharmacy: $e'))
+                  );
                 }
-
-                if (permission == LocationPermission.deniedForever) {
-                  return Future.error('Location permissions are permanently denied, we cannot request permissions.');
-                }
-
-                _currentPosition = await Geolocator.getCurrentPosition();
-                await firestoreService.addPharmacy(
-                  widget.user.uid,
-                  _pharmacyNameController.text,
-                  _currentPosition.latitude,
-                  _currentPosition.longitude,
-                );
-
-                Navigator.pop(context);
               },
               child: Text('Add Pharmacy'),
             ),
